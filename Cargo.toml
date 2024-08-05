@@ -1,0 +1,123 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+#=======================================================================================================================
+# Package
+#=======================================================================================================================
+
+[package]
+name = "demikernel"
+version = "1.5.10"
+authors = ["Microsoft Corporation"]
+edition = "2021"
+description = "Kernel-Bypass LibOS Architecture"
+readme = "README.md"
+homepage = "https://aka.ms/demikernel"
+repository = "https://github.com/demikernel/demikernel"
+license-file = "LICENSE.txt"
+
+#=======================================================================================================================
+# Dependencies
+#=======================================================================================================================
+
+[dependencies]
+
+# Third Party
+arrayvec = "0.7.4"
+async-trait = "0.1.80"
+anyhow = "1.0.86"
+bit-iter = "1.2.0"
+cfg-if = "1.0.0"
+crc = "3.2.1"
+clap = "4.5.7"
+crossbeam-channel = "0.5.13"
+eui48 = "1.1.0"
+flexi_logger = "0.28.3"
+futures = "0.3.30"
+histogram = "0.11.0"
+libc = "0.2.155"
+log = "0.4.21"
+mimalloc = { version = "0.1.42", default-features = false }
+rand = { version = "0.8.5", features = ["small_rng"] }
+slab = "0.4.9"
+socket2 = "0.5.7"
+yaml-rust = "0.4.5"
+x86 = "0.52.0"
+arraydeque = "0.4"
+
+# Local crates.
+nettest = { path = "nettest" }
+dpdk-rs = { path = "dpdk-rs", optional = true }
+
+# Windows-specific dependencies.
+[target.'cfg(windows)'.dependencies]
+# libc implementation in Rust is quite different for Windows and Linux. This library provides the relevant networking
+# constants and data structures for Windows.
+windows = { version = "0.57.0", features = [
+    "Win32_Foundation",
+    "Win32_Networking_WinSock",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_IO",
+    "Win32_System_Pipes",
+    "Win32_System_Threading",
+] }
+# for interacting with socket2.
+windows-sys = { version = "0.52.0", features = ["Win32_Networking_WinSock"] }
+
+#=======================================================================================================================
+# Targets
+#=======================================================================================================================
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/rust/lib.rs"
+
+[[example]]
+name = "tcp-echo-multiflow"
+path = "examples/rust/tcp-echo-multiflow.rs"
+
+
+#=======================================================================================================================
+# Features
+#=======================================================================================================================
+
+[features]
+default = ["catnip-libos"]
+catnap-libos = []
+catpowder-libos = []
+catmem-libos = []
+catnip-libos = ["libdpdk"]
+catloop-libos = ["catmem-libos"]
+libdpdk = ["dpdk-rs"]
+mlx4 = ["dpdk-rs/mlx4"]
+mlx5 = ["dpdk-rs/mlx5"]
+profiler = []
+
+#=======================================================================================================================
+# Profile
+#=======================================================================================================================
+
+# Build profile used for releases.
+[profile.release]
+opt-level = 3            # Enable all compiler optimizations.
+debug = false            # Do not include any debug info in the binary.
+debug-assertions = false # Do not include any debug assertions in the binary.
+overflow-checks = false  # Do not check for overflows at runtime.
+lto = "fat"              # Perform link time optimizations across all dependencies (overridden).
+panic = "abort"          # Terminate the process upon panic (overridden).
+incremental = false      # Disable incremental compilation.
+codegen-units = 1        # Produce a single code generation unit (overridden).
+rpath = false            # Disable runtime search path.
+
+# Build profile used for development and debugging.
+[profile.dev]
+opt-level = 0           # Disable all compiler optimizations.
+debug = true            # Output full debug info in the binary.
+debug-assertions = true # Include debug assertions in the binary.
+overflow-checks = true  # Check for overflows at runtime.
+lto = "off"             # Disable link time optimization (overridden).
+panic = 'unwind'        # Unwind the stack upon panic.
+incremental = true      # Incremental build.
+codegen-units = 256     # Produce multiple code generation units.
+rpath = false           # Disable runtime search path.
