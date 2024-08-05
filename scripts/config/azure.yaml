@@ -1,0 +1,27 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+demikernel:
+  local_ipv4_addr: XX.XX.XX.XX
+  local_link_addr: "ff:ff:ff:ff:ff:ff"
+raw_socket:
+  interface_name: "abcde"
+dpdk:
+  eal_init: ["-c", "0xff", "-n", "4", "-a", "YY:YY:.Y","--proc-type=auto", "--vdev=net_vdev_netvsc0,iface=abcde"]
+tcp_socket_options:
+  keepalive:
+    enabled: false
+    time_millis: 0
+    interval: 0
+  linger:
+    enabled: true
+    time_seconds: 0
+  nodelay: true
+inetstack_config:
+  mtu: 1500
+  mss: 1500
+  enable_jumbo_frames: false
+  udp_checksum_offload: false
+  tcp_checksum_offload: false
+
+# vim: set tabstop=2 shiftwidth=2
